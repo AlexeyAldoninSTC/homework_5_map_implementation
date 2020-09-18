@@ -17,6 +17,7 @@ public class MyHashTable<K, V> {
      */
     public void put (K key, V value) {
         Pair<K, V> input = new Pair<>(key, value);
+        int targetIndex = indexFor(key.hashCode(), nodes.length);
         for (int i = 0; i < nodes.length; i++) {
             if (nodes[i] == null) {
                 nodes[i] = new Node<>();
@@ -30,7 +31,9 @@ public class MyHashTable<K, V> {
                 return;
             }
             if (nodes[i].hashCode() == input.hashCode()) {
-                size += nodes[i].addPairToPairList(input);
+                if (nodes[targetIndex].addPairToPairList(input)) {
+                    size ++;
+                }
                 return;
             }
         }
@@ -149,5 +152,8 @@ public class MyHashTable<K, V> {
         }
         builder.append(']');
         return builder.toString();
+    }
+    static int indexFor(int h, int length) {
+        return h & (length-1);
     }
 }

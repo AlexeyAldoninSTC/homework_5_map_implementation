@@ -17,22 +17,22 @@ public class Node<K, V> implements Comparable<Node<K, V>> {
     /**
      * Method to add provided pair to List of Pairs
      * @param pair - argument to be added
-     * @return - number of new pairs in List. '0' - curtain pair was updated, '1' - new Pair was added to list
+     * @return - 'true' if list size increased
      */
-    int addPairToPairList(Pair<K, V> pair) {
+    boolean addPairToPairList(Pair<K, V> pair) {
         if (pairList.getSize() == 0) {
             pairList.put(pair);
-            return 1;
+            return true;
         }
         for (int i = 0; i < pairList.getSize(); i++) {
             Pair<K, V> temp = pairList.get(i);
             if (pair.getKey().equals(temp.getKey())){
                 temp.fillPair(pair.getKey(), pair.getValue());
-                return 0;
+                return false;
             }
         }
         pairList.put(pair);
-        return 1;
+        return true;
     }
 
     MyLinkedList<Pair<K, V>> getPairList() {

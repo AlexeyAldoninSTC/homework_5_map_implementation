@@ -55,10 +55,14 @@ public class MyHashMapTest {
 
     @Test
     public void put() {
-        assertNull(map.put(1, 10));
-        assertEquals(1, map.size());
+        for (int i = 0; i < 100; i++) {
+            map.put(i, i *10);
+        }
+        assertEquals(Integer.valueOf(300), map.get(30));
+        assertNull(map.put(100, 10));
+        assertEquals(101, map.size());
         assertEquals(Integer.valueOf(10), map.put(1, 20));
-        assertEquals(1, map.size());
+        assertEquals(101, map.size());
     }
 
     @Test

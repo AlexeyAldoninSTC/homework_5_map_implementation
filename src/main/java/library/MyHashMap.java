@@ -4,10 +4,10 @@ import java.util.*;
 
 public class MyHashMap<K, V> implements Map<K, V> {
 
-    Node<K, V>[] nodes = new Node[10];
+    Node<K, V>[] nodes = new Node[16];
     private int fillFactor = 0;
     private int size = 0;
-    double loadRange = 0.75;
+    double loadRange = (double) 3 / 4;
 
     @Override
     public int size() {
@@ -21,21 +21,20 @@ public class MyHashMap<K, V> implements Map<K, V> {
 
     @Override
     public boolean containsKey(Object key) {
-        for (int i = 0; i < fillFactor; i++) {
-            if (nodes[i].getPairList().contains(key)) {
-                return true;
-            }
-        }
-        return false;
+        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        return nodes[targetIndex] != null &&
+                nodes[targetIndex].getPairList().contains(key);
     }
 
     @Override
     public boolean containsValue(Object value) {
-        for (int i = 0; i < fillFactor; i++) {
-            MyLinkedList<Pair<K, V>> pairList = nodes[i].getPairList();
-            for (int j = 0; j < pairList.getSize(); j++) {
-                if(pairList.get(j).getValue().equals(value)){
-                    return true;
+        for (Node<K, V> node : nodes) {
+            if (node != null) {
+                MyLinkedList<Pair<K, V>> pairList = node.getPairList();
+                for (int j = 0; j < pairList.getSize(); j++) {
+                    if (pairList.get(j).getValue().equals(value)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -47,15 +46,16 @@ public class MyHashMap<K, V> implements Map<K, V> {
         if (size == 0) {
             return null;
         }
-        for (int i = 0; i < size; i++) {
-            if (nodes[i].hashCode() == key.hashCode()) {
-                for (int j = 0; j < nodes[i].getPairList().getSize(); j++) {
-                    Pair<K, V> pair = nodes[i].getPairList().get(j);
-                    if (pair.getKey().equals(key)) {
-                        return pair.getValue();
-                    }
+        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        if (nodes[targetIndex] != null &&
+                nodes[targetIndex].hashCode() == key.hashCode()) {
+            for (int j = 0; j < nodes[targetIndex].getPairList().getSize(); j++) {
+                Pair<K, V> pair = nodes[targetIndex].getPairList().get(j);
+                if (pair.getKey().equals(key)) {
+                    return pair.getValue();
                 }
             }
+            return null;
         }
         return null;
     }
@@ -64,28 +64,36 @@ public class MyHashMap<K, V> implements Map<K, V> {
     public V put(K key, V value) {
         V prev = this.get(key);
         Pair<K, V> input = new Pair<>(key, value);
-        for (int i = 0; i < nodes.length; i++) {
-            if (nodes[i] == null) {
-                nodes[i] = new Node<>();
-            }
-            if (nodes[i].hashCode() != input.hashCode() && nodes[i].hashCode() == 0) {
-                nodes[i].getPairList().put(input);
-                fillFactor++;
+        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        if (nodes[targetIndex] == null) {
+            nodes[targetIndex] = new Node<>();
+        }
+        if (nodes[targetIndex].hashCode() != input.hashCode() && nodes[targetIndex].hashCode() == 0) {
+            nodes[targetIndex].getPairList().put(input);
+            fillFactor++;
+            size++;
+            ensureNodesCapacity();
+            Arrays.sort(nodes, 0, fillFactor - 1);
+            return prev;
+        }
+        if (nodes[targetIndex].hashCode() == input.hashCode()) {
+            if (nodes[targetIndex].addPairToPairList(input)) {
                 size++;
-                ensureNodesCapacity();
-                Arrays.sort(nodes,0, fillFactor - 1);
-                return prev;
             }
-            if (nodes[i].hashCode() == input.hashCode()) {
-                size += nodes[i].addPairToPairList(input);
-                return prev;
-            }
+            return prev;
         }
         return prev;
     }
+
     private void ensureNodesCapacity() {
         if ((double) fillFactor / nodes.length >= loadRange) {
-            nodes = Arrays.copyOf(nodes, nodes.length << 1);
+            Node<K, V>[] result = new Node[nodes.length << 1];
+            for (Node<K, V> node : nodes) {
+                if (node != null) {
+                    result[indexFor(node.hashCode(), result.length)] = node;
+                }
+            }
+            nodes = result;
         }
     }
 
@@ -94,31 +102,23 @@ public class MyHashMap<K, V> implements Map<K, V> {
         if (size == 0) {
             return null;
         }
-        for (int i = 0; i < size; i++) {
-            if (nodes[i].hashCode() == key.hashCode()) {
-                for (int j = 0; j < nodes[i].getPairList().getSize(); j++) {
-                    Pair<K, V> pair = nodes[i].getPairList().get(j);
-                    if (pair.getKey().equals(key)) {
-                        nodes[i].getPairList().delete(pair);
-                        if (nodes[i].getPairList().getSize() == 0) {
-                            nodes[i] = null;
-                            recollectNodesArray(i);
-                            fillFactor--;
-                        }
-                        size--;
-                        return pair.getValue();
+        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        if (nodes[targetIndex] != null &&
+                nodes[targetIndex].hashCode() == key.hashCode()) {
+            for (int j = 0; j < nodes[targetIndex].getPairList().getSize(); j++) {
+                Pair<K, V> pair = nodes[targetIndex].getPairList().get(j);
+                if (pair.getKey().equals(key)) {
+                    nodes[targetIndex].getPairList().delete(pair);
+                    if (nodes[targetIndex].getPairList().getSize() == 0) {
+                        nodes[targetIndex] = null;
+                        fillFactor--;
                     }
+                    size--;
+                    return pair.getValue();
                 }
             }
         }
         return null;
-    }
-
-    private void recollectNodesArray(int indexOfNull) {
-        Node<K, V>[] temp = new Node[nodes.length];
-        System.arraycopy(nodes,0, temp, 0, indexOfNull);
-        System.arraycopy(nodes, indexOfNull + 1, temp, indexOfNull, size - indexOfNull - 1);
-        nodes = temp;
     }
 
     @Override
@@ -136,10 +136,12 @@ public class MyHashMap<K, V> implements Map<K, V> {
     @Override
     public Set<K> keySet() {
         Set<K> keySet = new HashSet<>();
-        for (int i = 0; i < fillFactor; i++) {
-            MyLinkedList<Pair<K, V>> pairList = nodes[i].getPairList();
-            for (int j = 0; j < pairList.getSize(); j++) {
-                keySet.add(pairList.get(j).getKey());
+        for (Node<K, V> node : nodes) {
+            if (node != null) {
+                MyLinkedList<Pair<K, V>> pairList = node.getPairList();
+                for (int j = 0; j < pairList.getSize(); j++) {
+                    keySet.add(pairList.get(j).getKey());
+                }
             }
         }
         return keySet;
@@ -148,10 +150,12 @@ public class MyHashMap<K, V> implements Map<K, V> {
     @Override
     public Collection<V> values() {
         List<V> values = new ArrayList<>();
-        for (int i = 0; i < fillFactor; i++) {
-            MyLinkedList<Pair<K, V>> pairList = nodes[i].getPairList();
-            for (int j = 0; j < pairList.getSize(); j++) {
-                values.add(pairList.get(j).getValue());
+        for (Node<K, V> node : nodes) {
+            if (node != null) {
+                MyLinkedList<Pair<K, V>> pairList = node.getPairList();
+                for (int j = 0; j < pairList.getSize(); j++) {
+                    values.add(pairList.get(j).getValue());
+                }
             }
         }
         return values;
@@ -160,12 +164,18 @@ public class MyHashMap<K, V> implements Map<K, V> {
     @Override
     public Set<Entry<K, V>> entrySet() {
         Set<Entry<K, V>> keySet = new HashSet<>();
-        for (int i = 0; i < fillFactor; i++) {
-            MyLinkedList<Pair<K, V>> pairList = nodes[i].getPairList();
-            for (int j = 0; j < pairList.getSize(); j++) {
-                keySet.add(pairList.get(j));
+        for (Node<K, V> node : nodes) {
+            if (node != null) {
+                MyLinkedList<Pair<K, V>> pairList = node.getPairList();
+                for (int j = 0; j < pairList.getSize(); j++) {
+                    keySet.add(pairList.get(j));
+                }
             }
         }
         return keySet;
+    }
+
+    static int indexFor(int h, int length) {
+        return h & (length - 1);
     }
 }
