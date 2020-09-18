@@ -73,7 +73,6 @@ public class MyHashMap<K, V> implements Map<K, V> {
             fillFactor++;
             size++;
             ensureNodesCapacity();
-            Arrays.sort(nodes, 0, fillFactor - 1);
             return prev;
         }
         if (nodes[targetIndex].hashCode() == input.hashCode()) {
