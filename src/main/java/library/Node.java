@@ -26,7 +26,8 @@ public class Node<K, V> implements Comparable<Node<K, V>> {
         }
         for (int i = 0; i < pairList.getSize(); i++) {
             Pair<K, V> temp = pairList.get(i);
-            if (pair.getKey().equals(temp.getKey())){
+            if (pair.getKey() == temp.getKey()
+                    || (pair.getKey() != null && pair.getKey().equals(temp.getKey()))){
                 temp.fillPair(pair.getKey(), pair.getValue());
                 return false;
             }

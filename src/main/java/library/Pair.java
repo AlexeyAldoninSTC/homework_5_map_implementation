@@ -13,7 +13,8 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     }
 
     void fillPair(K key, V value) {
-        if (key.equals(this.key)) {
+        if ((key != null && key.equals(this.key))
+                || (key == null && this.key == null)) {
             this.value = value;
             return;
         }
@@ -38,7 +39,7 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        return this.key.equals(o);
+        return this.key == o ||this.key.equals(o);
     }
 
     @Override
@@ -52,8 +53,8 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     @Override
     public String toString() {
         return "[" +
-                key.toString() +
-                ", " + value.toString() +
+                key +
+                ", " + value +
                 "]";
     }
 }

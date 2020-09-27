@@ -21,7 +21,7 @@ public class MyHashMap<K, V> implements Map<K, V> {
 
     @Override
     public boolean containsKey(Object key) {
-        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        int targetIndex = indexFor(getHash(key), nodes.length);
         return nodes[targetIndex] != null &&
                 nodes[targetIndex].getPairList().contains(key);
     }
@@ -32,7 +32,8 @@ public class MyHashMap<K, V> implements Map<K, V> {
             if (node != null) {
                 MyLinkedList<Pair<K, V>> pairList = node.getPairList();
                 for (int j = 0; j < pairList.getSize(); j++) {
-                    if (pairList.get(j).getValue().equals(value)) {
+                    V pairValue = pairList.get(j).getValue();
+                    if (pairValue == value || pairValue.equals(value)) {
                         return true;
                     }
                 }
@@ -46,12 +47,14 @@ public class MyHashMap<K, V> implements Map<K, V> {
         if (size == 0) {
             return null;
         }
-        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        int keyHash = getHash(key);
+        int targetIndex = indexFor(keyHash, nodes.length);
         if (nodes[targetIndex] != null &&
-                nodes[targetIndex].hashCode() == key.hashCode()) {
+                nodes[targetIndex].hashCode() == keyHash) {
             for (int j = 0; j < nodes[targetIndex].getPairList().getSize(); j++) {
                 Pair<K, V> pair = nodes[targetIndex].getPairList().get(j);
-                if (pair.getKey().equals(key)) {
+                K pairKey = pair.getKey();
+                if (pairKey == key || pairKey.equals(key)) {
                     return pair.getValue();
                 }
             }
@@ -64,35 +67,41 @@ public class MyHashMap<K, V> implements Map<K, V> {
     public V put(K key, V value) {
         V prev = this.get(key);
         Pair<K, V> input = new Pair<>(key, value);
-        int targetIndex = indexFor(key.hashCode(), nodes.length);
+        int keyHash = getHash(key);
+        int targetIndex = indexFor(keyHash, nodes.length);
         if (nodes[targetIndex] == null) {
             nodes[targetIndex] = new Node<>();
-        }
-        if (nodes[targetIndex].hashCode() != input.hashCode() && nodes[targetIndex].hashCode() == 0) {
-            nodes[targetIndex].getPairList().put(input);
             fillFactor++;
+        }
+        if (nodes[targetIndex].addPairToPairList(input)){
             size++;
-            ensureNodesCapacity();
-            return prev;
         }
-        if (nodes[targetIndex].hashCode() == input.hashCode()) {
-            if (nodes[targetIndex].addPairToPairList(input)) {
-                size++;
-            }
-            return prev;
-        }
+        ensureCapacity();
         return prev;
     }
 
-    private void ensureNodesCapacity() {
+    /**
+     * increases this nodes array length and refills new array with all pairs.
+     */
+    private void ensureCapacity() {
         if ((double) fillFactor / nodes.length >= loadRange) {
-            Node<K, V>[] result = new Node[nodes.length << 1];
-            for (Node<K, V> node : nodes) {
+            Node<K, V>[] temp = nodes;
+            nodes = new Node[nodes.length << 1];
+            fillFactor = 0;
+            for (Node<K, V> node : temp) {
                 if (node != null) {
-                    result[indexFor(node.hashCode(), result.length)] = node;
+                    for (int i = 0; i < node.getPairList().getSize(); i++) {
+                        Pair<K, V> pair = node.getPairList().get(i);
+                        int keyHash = getHash(pair.getKey());
+                        int targetIndex = indexFor(keyHash, nodes.length);
+                        if (nodes[targetIndex] == null) {
+                            nodes[targetIndex] = new Node<>();
+                            fillFactor++;
+                        }
+                        nodes[targetIndex].addPairToPairList(pair);
+                    }
                 }
             }
-            nodes = result;
         }
     }
 
@@ -176,5 +185,8 @@ public class MyHashMap<K, V> implements Map<K, V> {
 
     static int indexFor(int h, int length) {
         return h & (length - 1);
+    }
+    static int getHash(Object o) {
+        return o == null ? 0 : o.hashCode();
     }
 }

@@ -13,6 +13,7 @@ import static org.junit.Assert.*;
 public class MyHashMapTest {
 
     Map<Integer, Integer> map = new MyHashMap<>();
+    Map<Integer, Integer> realMap = new HashMap<>();
 
     @Test
     public void size() {
@@ -54,6 +55,28 @@ public class MyHashMapTest {
     }
 
     @Test
+    public void putNull() {
+        assertEquals(0, map.size());
+        map.put(null, 1);
+        map.put(1, 2);
+        map.put(2, null);
+        assertEquals(3, map.size());
+        assertEquals(Integer.valueOf(1), map.get(null));
+        assertTrue(map.containsKey(null));
+        assertTrue(map.containsValue(1));
+        assertTrue(map.containsValue(null));
+        for (int i = 0; i < 100; i++) {
+            map.put(null, i);
+        }
+        assertEquals(3, map.size());
+        assertEquals(Integer.valueOf(99), map.get(null));
+        map.clear();
+        realMap.put(1, null);
+        map.put(1, null);
+        assertEquals(realMap.get(1), map.get(1));
+    }
+
+    @Test
     public void put() {
         for (int i = 0; i < 100; i++) {
             map.put(i, i *10);
@@ -78,14 +101,13 @@ public class MyHashMapTest {
 
     @Test
     public void putAll() {
-        assertEquals(0, map.size());
-        Map<Integer, Integer> map1 = new HashMap<>();
-        map1.put(1, 10);
-        map1.put(2, 20);
-        map.putAll(map1);
-        assertEquals(2, map.size());
-        assertTrue(map.containsKey(1));
-        assertTrue(map.containsValue(20));
+        Map<Object, Object> myObjectMap = new MyHashMap<>();
+        Map<Object, Object> realObjectMap = new MyHashMap<>();
+        for (int i = 0; i < 1500; i++) {
+            realObjectMap.put(new Object(), new Object());
+        }
+        myObjectMap.putAll(realObjectMap);
+        assertEquals(realObjectMap.size(), myObjectMap.size());
     }
 
     @Test
@@ -109,6 +131,12 @@ public class MyHashMapTest {
         assertTrue(set.contains(1));
         assertTrue(set.contains(2));
         assertFalse(set.contains(3));
+        map.clear();
+        for (int i = 0; i < 500; i++) {
+            map.put(i, null);
+            map.put(null, i);
+        }
+        assertEquals(501, map.keySet().size());
     }
 
     @Test
@@ -120,6 +148,12 @@ public class MyHashMapTest {
         assertEquals(2, values.size());
         assertTrue(values.contains(10));
         assertTrue(values.contains(20));
+        map.clear();
+        for (int i = 0; i < 500; i++) {
+            map.put(i, null);
+            map.put(null, i);
+        }
+        assertEquals(501, map.values().size());
     }
 
     @Test
