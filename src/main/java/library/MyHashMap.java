@@ -49,8 +49,7 @@ public class MyHashMap<K, V> implements Map<K, V> {
         }
         int keyHash = getHash(key);
         int targetIndex = indexFor(keyHash, nodes.length);
-        if (nodes[targetIndex] != null &&
-                nodes[targetIndex].hashCode() == keyHash) {
+        if (nodes[targetIndex] != null) {
             for (int j = 0; j < nodes[targetIndex].getPairList().getSize(); j++) {
                 Pair<K, V> pair = nodes[targetIndex].getPairList().get(j);
                 K pairKey = pair.getKey();

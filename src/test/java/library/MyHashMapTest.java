@@ -102,12 +102,22 @@ public class MyHashMapTest {
     @Test
     public void putAll() {
         Map<Object, Object> myObjectMap = new MyHashMap<>();
-        Map<Object, Object> realObjectMap = new MyHashMap<>();
+        Map<Object, Object> realObjectMap = new HashMap<>();
         for (int i = 0; i < 1500; i++) {
             realObjectMap.put(new Object(), new Object());
         }
         myObjectMap.putAll(realObjectMap);
         assertEquals(realObjectMap.size(), myObjectMap.size());
+
+        Set<Map.Entry<Object, Object>> myEntrySet = myObjectMap.entrySet();
+        Set<Map.Entry<Object, Object>> realEntrySet = realObjectMap.entrySet();
+        assertEquals(realEntrySet.size(), myEntrySet.size());
+
+        for (Map.Entry<Object, Object> entry : realEntrySet) {
+            assertTrue(myObjectMap.containsKey(entry.getKey()));
+            assertTrue(myObjectMap.containsValue(entry.getValue()));
+            assertEquals(entry.getValue(), myObjectMap.get(entry.getKey()));
+        }
     }
 
     @Test
