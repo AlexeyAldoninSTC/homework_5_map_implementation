@@ -53,7 +53,7 @@ public class Node<K, V> implements Comparable<Node<K, V>> {
         if (pairList.getSize() == 0) {
             return 0;
         }
-        return pairList.get(0).hashCode();
+        return pairList.hashCode();
     }
 
     @Override
