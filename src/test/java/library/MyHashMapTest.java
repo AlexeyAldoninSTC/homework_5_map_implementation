@@ -97,6 +97,9 @@ public class MyHashMapTest {
         assertEquals(Integer.valueOf(10), map.remove(1));
         assertEquals(1, map.size());
         assertNull(map.remove(2));
+        assertEquals(Integer.valueOf(30), map.remove(3));
+        assertEquals(0, map.size());
+
     }
 
     @Test

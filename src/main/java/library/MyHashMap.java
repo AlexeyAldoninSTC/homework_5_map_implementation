@@ -110,8 +110,7 @@ public class MyHashMap<K, V> implements Map<K, V> {
             return null;
         }
         int targetIndex = indexFor(key.hashCode(), nodes.length);
-        if (nodes[targetIndex] != null &&
-                nodes[targetIndex].hashCode() == key.hashCode()) {
+        if (nodes[targetIndex] != null) {
             for (int j = 0; j < nodes[targetIndex].getPairList().getSize(); j++) {
                 Pair<K, V> pair = nodes[targetIndex].getPairList().get(j);
                 if (pair.getKey().equals(key)) {
